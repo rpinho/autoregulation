@@ -41,6 +41,10 @@ myrun_noiseN4f = ['N4bso1e-100100', 'N4bso0.01100', 'N4bso0.05100',
 myrun_noiseN4s = ['N4bso1e-100n8100', 'N4bso0.01n8100', 'N4bso0.05n8100',
                   'N4bso0.1n8100', 'N4bso0.15n8100',
                   'N4bso0.2n8100', 'N4bso0.25n8100']
+#
+myrun_noiseN4s200 = ['N4bso1e-100n8200', 'N4bso0.01n8200', 'N4bso0.05n8200',
+                     'N4bso0.1n8200', 'N4bso0.15n8200',
+                     'N4bso0.2n8200', 'N4bso0.25n8200']
 # 'after'
 myrun_noiseN4a = ['N4bso1e-100an8100', 'N4bso0.01an8100', 'N4bso0.05an8100',
                   'N4bso0.1an8100', 'N4bso0.15an8100',

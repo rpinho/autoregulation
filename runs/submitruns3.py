@@ -18,7 +18,7 @@ from runs.run3 import *
 script = '/runs/run3.py'
 
 # networks
-bits = range(11,20)
+bits = range(12,19)
 #list(get_int_datapoints(log10(3000), log10(10000), 4))[1:]
 densities = [c]#c#None
 degrees = [None]#None#'N-1'#2
@@ -34,7 +34,7 @@ act_fractions = [p]#[None] #[0., .1]#arange(0, 1.1, .1)
 
 # development process parameters
 #phe_decimal   = 1023
-mins = [-1.]#-1.]#, -1.]
+mins = [-1.]#, -1.]
 dims = [2]#range(2, 10)#k_dict(bits[0]) + 1)#[2]#[3]
 noises = [0]#[1e-100, .01, .05, .1, .15, .2, .25] #linspace(1e-100, .15, 5)
 #noises = [1e-100, 1, 2, 3, 4]
@@ -59,6 +59,8 @@ robustness_threshold = .1
 deterministic = True#False
 random = True#False
 stable = False#True
+if stable and any(noises):
+    _devo_times = [200]
 sel_period = 1
 max_trials = F*10 # for generate_stable_genotype()
 binary = True#False

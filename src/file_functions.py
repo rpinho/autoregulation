@@ -839,9 +839,9 @@ def load_nan_obj(filename, size, attr, verbose=False):
         return data
 
 # stability
-def load_last_line_of_txt(filename, verbose=False):
+def load_last_line_of_txt(filename, verbose=False, dtype=float):
     try:
-        data = loadtxt(filename, float)
+        data = loadtxt(filename, dtype)
     except IOError:
         if verbose:
             print 'cannot open', filename

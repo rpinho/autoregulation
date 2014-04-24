@@ -91,7 +91,7 @@ def load_base(basename, base, bits=N, extension=''):
 
     if (bits not in basemaps[basename]['decimal_to_vector'].keys() or
         bits not in basemaps[basename]['vector_to_decimal'].keys()):
-        basemaps[basename] = build_base_mapping(base, bits)
+        basemaps[basename] = build_base_mapping(base, bits, extension)
 
 ##
 def get_base(
@@ -162,7 +162,7 @@ def sign0(x):
 ###############################################
 
 def get_vector(decimal, basename, base, bits=N):
-    # TODO: consider using binary_repr(decimal, width = bits) for base = (0,1)
+    # TODO: consider using binary_repr(decimal, width=bits) for base = (0,1)
     if base.size <= k_dict(bits) and bits <= N_dict:
         return basemaps[basename]['decimal_to_vector'][bits][decimal].copy()
     else:

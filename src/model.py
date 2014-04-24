@@ -27,7 +27,7 @@ seed()
 
 ##
 def get_gpmap(
-        base=def_base, basename=def_basename, density= c, bits=N, binary=False,
+        base=def_base, basename=def_basename, density=c, bits=N, binary=False,
         jumps=array([ 0.]), alt_gpmap=csign, heaviside=cHeaviside):
 
     if base.size == 2:
@@ -401,7 +401,7 @@ def change_diagonal(genotype, diagonal, bits):
     return genotype.reshape(bits,bits)
 
 #
-def ldu_genotype(diagonal, triangle, bits = N):
+def ldu_genotype(diagonal, triangle, bits=N):
     genotype = empty(bits**2)
     ind_all  = range(bits**2)
     ind_diag = range(0, bits**2, bits+1)
@@ -419,7 +419,7 @@ def ldu_genotype(diagonal, triangle, bits = N):
 '''
 #
 def qp_genotype(
-        bits = N, density = c, p = p, q = p, deterministic = True, **args):
+        bits=N, density=c, p=p, q=p, deterministic=True, **args):
 
     diagonal = generate_pos_neg_zeros_binary_vector(
         bits, density, p, deterministic)
@@ -704,7 +704,7 @@ def int_phenotype(base, bits=N, dtype=Dtype):
     return array([base[randint(base.size)] for i in range(bits)], dtype=dtype)
 
 # real-valued [min, 1]
-def real_phenotype(bits = N, min = -1., **args):
+def real_phenotype(bits=N, min=-1., **args):
     return array(uniform(min, 1, bits))
 
 # general caller function
@@ -873,7 +873,7 @@ def get_initials_and_genotypes(
                 # so its basically random binary, not full_enum
                 # (from http://docs.python.org/library/itertools.html#recipes)
 
-    # graph with biologial topology
+    # graph with biological topology
     elif graph:
         if scale_free:
             graph_genotype = generate_scale_free_genotype
@@ -894,7 +894,7 @@ def get_initials_and_genotypes(
             return (get_network(network, filters, knockouts, random)[0]
                     for i in xrange(int(samples)) )
         else:
-            return ((phenotype_function(base, bits, initials = initials),
+            return ((phenotype_function(base, bits, initials=initials),
                      get_network(network, filters, knockouts, random)[0])
                     for i in xrange(int(samples)) )
 

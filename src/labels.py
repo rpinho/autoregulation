@@ -328,6 +328,9 @@ def get_myrun_title(myrun, experiment='dims'):
     if myrun.degree < myrun.bits:
         matrices += ' and density %.1f' %myrun.density
 
+    if myrun.min == 0:
+        matrices += ', min = 0'
+
     noise_func = ''
     if myrun.noise_function != 'random_noise':
         noise_func = ''.join(('\n',
