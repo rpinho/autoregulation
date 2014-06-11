@@ -18,7 +18,7 @@ from runs.run3 import *
 script = '/runs/run3.py'
 
 # networks
-bits = range(12,19)
+bits = range(5,20)
 #list(get_int_datapoints(log10(3000), log10(10000), 4))[1:]
 densities = [c]#c#None
 degrees = [None]#None#'N-1'#2
@@ -34,20 +34,21 @@ act_fractions = [p]#[None] #[0., .1]#arange(0, 1.1, .1)
 
 # development process parameters
 #phe_decimal   = 1023
-mins = [-1.]#, -1.]
+mins = [0.]#, -1.]
 dims = [2]#range(2, 10)#k_dict(bits[0]) + 1)#[2]#[3]
-noises = [0]#[1e-100, .01, .05, .1, .15, .2, .25] #linspace(1e-100, .15, 5)
-#noises = [1e-100, 1, 2, 3, 4]
-noise_function = 'random_noise'
-#noise_function = 'neighbour_flip'#force_different_flip'#random_flip'#
+noises = [1e-100, .01, .05, .1, .15, .2, .25]#, .3, .35, .4, .45]
+#noise_function = 'random_noise'
+noise_function = 'force_different_flip'#neighbour_flip'#random_flip'#
 noise_time = 'before'#shmulevich'#after'#
+if 'flip' in noise_function and noise_time != 'shmulevich':
+    noises = [1e-100, 1, 2, 3, 4]
 _devo_times = [inf]#'maximum'#'mean'#inf ## NOTE: inf is not a String!
 if any(noises):
     devo_time = 'maximum'
     if dims == devo_times[devo_time].keys():
         _devo_times = [devo_time]#'mean'
     else:
-        _devo_times = [100]#]#[devo_times[devo_time]['2']['1.0']['%d' %bits[0]]]
+        _devo_times = [100]#[devo_times[devo_time]['2']['1.0']['%d' %bits[0]]]
 gpmap = None#'csign'#cHeaviside0#
 steps = 'uniform'#'quantiles'#
 steepness = a
@@ -57,10 +58,11 @@ robustness_threshold = .1
 
 # genotype/initials sampling
 deterministic = True#False
+# NOTE: i don't think random is used in get_individuals()/genotypes
 random = True#False
 stable = False#True
-if stable and any(noises):
-    _devo_times = [200]
+#if stable and any(noises) and _devo_times == [100]:
+ #   _devo_times = [200]
 sel_period = 1
 max_trials = F*10 # for generate_stable_genotype()
 binary = True#False
@@ -175,7 +177,7 @@ verbose = True#False
 rm_file = False#True
 
 # run/cluster
-submitrun = True#False# # submit or just create and save myrun file?
+submitrun = True#False # submit or just create and save myrun file? (dry-run)
 setup = False # pre-setup
 if not submitrun:
     setup = True
@@ -373,7 +375,12 @@ for run in runs:
                 prefix = 'n%d' %run
 
             else:
-                prefix += '%s' %str(devo_time)[:4]
+                # 'maximum' or 'mean'
+                if isinstance(devo_time, str):
+                    prefix += '%s' %str(devo_time)[:4]
+                # inf, 100, etc. NOTE: type(inf) == float
+                else:
+                    prefix += '%g' %devo_time
 
                 if experiment == 'stability':
                     prefix += 's'

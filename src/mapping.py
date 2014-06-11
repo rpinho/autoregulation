@@ -33,13 +33,14 @@ tf_gene_map = load_file(maps_dir + 'tf_gene_map.dict')
 ## returns equally spaced states (steps yy) given min_y, max_y and
 #  number of steps (states)
 def get_equalprobable_states(
-        n=n_states, min=min_state, max=max_state, dtype=Dtype):
-    return linspace(min, max, n).astype(dtype)
+        n=n_states, min_=min_state, max_=max_state, dtype=Dtype):
+    return linspace(min_, max_, n).astype(dtype)
 
-## uniform jumps are always between [-1, 1], so they only depend on n_states
+## uniform jumps are always between [-1, 1]
+# they only depend on n_states, not min
 def get_jumps(n=n_states):
-    step = 2./n
-    return arange(-1 + step, 1, step)
+    #step = 2./n
+    return linspace(-1, 1, n, False)[1:]#arange(-1 + step, 1, step)
 
 ## full enumeration of phenotype (vector) space: size = base.size^bits
 #  its the full Cartesian Product of its base with itself
@@ -95,8 +96,8 @@ def load_base(basename, base, bits=N, extension=''):
 
 ##
 def get_base(
-        k=n_states, bits=N, min=min_state, steps='uniform', max=max_state):
-    base = get_equalprobable_states(k, min, max)
+        k=n_states, bits=N, min_=min_state, steps='uniform', max_=max_state):
+    base = get_equalprobable_states(k, min_, max_)
     basename = get_basename(base)
     jumps = get_jumps(k) if steps == 'uniform' else quantiles[basename]
     ## ATTENTION: bias corrected

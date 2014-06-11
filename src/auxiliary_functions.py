@@ -38,5 +38,18 @@ def find_nearest_i(x, value):
 def find_nearest(x, value):
     return x[find_nearest_i(x, value)]
 
-def add_random_noise(x, noise=0.2):
-    return x + noise*rand() - .1
+# fixed for all elements of array x
+def fixed_jitter(x, jitter=0.2):
+    return x + jitter*rand() - .1
+
+# random for each element of array x
+def random_jitter(x, jitter=0.2):
+    return x + jitter*rand(len(x)) - .1
+
+# from https://stackoverflow.com/questions/8671808/matplotlib-preventing-overlaying-datapoints
+def rand_jitter(arr):
+    stdev = arr.max()/100.
+    return arr + randn(len(arr)) * stdev
+
+def jitter(x, y, s=20, c='b', marker='o', cmap=None, norm=None, vmin=None, vmax=None, alpha=None, linewidths=None, verts=None, hold=None, **kwargs):
+    return scatter(rand_jitter(x), rand_jitter(y), s=20, c='b', marker='o', cmap=None, norm=None, vmin=None, vmax=None, alpha=None, linewidths=None, verts=None, hold=None, **kwargs)

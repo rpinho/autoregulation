@@ -621,6 +621,8 @@ def _get_figs_save_dir(journal, experiment='', shortname=''):
         return report_dir + experiment + '/figs/'
     if 'qp' in experiment:
         return figs_dir   + experiment.split('.')[0] + '/' + shortname + '/'
+    if 'transition' in experiment:
+        return figs_dir   + experiment + '/'
     else:
         return figs_dir
 
@@ -839,16 +841,26 @@ def load_nan_obj(filename, size, attr, verbose=False):
         return data
 
 # stability
-def load_last_line_of_txt(filename, verbose=False, dtype=float):
+def load_last_line_of_txt(filename, n=None, verbose=False, dtype=float):
     try:
         data = loadtxt(filename, dtype)
     except IOError:
         if verbose:
             print 'cannot open', filename
         return 0, 0
+#    except UserWarning:
+#        if verbose:
+#            print 'Empty input file:', filename
+#        return 0, 0
     else:
+        # load at closest point to n_samples == n
+        if n:
+            i = find_nearest_i(data.T[0], n)
+        # load last line by default
+        else:
+            i = -1
         try:
-            line = data[-1]
+            line = data[i]
         except IndexError:
             if verbose:
                 print 'Empty input file:', filename
@@ -858,8 +870,8 @@ def load_last_line_of_txt(filename, verbose=False, dtype=float):
                 print 'opening', filename
             return line
 
-def load_stability_from_txt_file(filename, verbose=True):
-    samples, n = load_last_line_of_txt(filename, verbose)
+def load_stability_from_txt_file(filename, n=None, verbose=True, *args):
+    samples, n = load_last_line_of_txt(filename, n, verbose)
     if samples:
         return n / samples
     else:
@@ -867,17 +879,38 @@ def load_stability_from_txt_file(filename, verbose=True):
 
 # always call with samples = 'n1e+08'
 def load_stable_states_from_txt_file(
-        filename, samples=[1e8, 1e6], devo_times=[16, 32, 100, 200],
+        filename, n=None, samples=[1e8, 1e6], devo_times=[16, 32, 100, 200],
         verbose=False):
 
+    # get all filenames with parameter substitution
     filenames = get_replaced_suffix(filename, samples, devo_times)
-    data = [load_last_line_of_txt(filename, verbose) for filename in filenames]
+    # load all runs
+    data = [load_last_line_of_txt(filename, n, verbose)
+            for filename in filenames]
+
+    # data transformation
     data = array(data)
+    # get x
+    n_samples = data.T[0]
+    # get y
+    n_states = data.T[1]
+
+    # get position of max visible states
+    imax = n_states.argmax()
+
+    # get number of runs
+    n_runs = where(n_samples == 1)[0].size
 
     if verbose:
-        print 'samples = %g' %data.T[0].max()
+        if n_runs > 1:
+            print 'ATTENTION: using ', n_runs, ' runs!'
+        if devo_times:
+            print 'T = ', devo_times
+        if samples:
+            print 'samples = ', samples
+        print 'samples = %g\t\tn = %d' %(n_samples[imax], n_states[imax])
 
-    return data.T[1].max()
+    return n_states[imax]
 
 def save_file(filename, data, flag=True):
     if flag:
@@ -933,20 +966,32 @@ def save_phenotype_sample(
         # Note: phenotypes are decimals ONLY!
     save_txt3(filename.replace('.tsv', '.txt'), data, 'w', str(samples))
 
+def split_filename_from_workdir(filename):
+    return filename.split('model/')[-1]
+
 # get all filename variations
 def get_replaced_filename(
         filename='', myrun=None,
-        bits=None, dim=None, noise=None, samples=None, devo_time=None,
+        bits=None, min_=None, dim=None, noise=None,
+        samples=None, devo_time=None,
         default_samples=1e8, default_devo_time=100):
 
+    suffix = ''
+
+    # myrun is fname
     if not filename and myrun:
         if isinstance(myrun, str):
             myrun = cPickle.load(open(logs_dir + myrun + '.run'))
-        filename = myrun.filename.split('model/')[-1]
+        filename = split_filename_from_workdir(myrun.filename)
 
+    # myrun is object
     if bits and myrun:
         old = print_N(myrun.bits)
         new = print_N(bits)
+
+    elif min_ is not None and myrun:
+        old = print_min(myrun.min)
+        new = print_min(min_)
 
     elif dim and myrun:
         old = print_dim(myrun.dim)
@@ -956,6 +1001,9 @@ def get_replaced_filename(
         old = print_noise(myrun.noise_function, myrun.noise, myrun.noise_time)
         new = print_noise(myrun.noise_function, noise, myrun.noise_time)
 
+        if myrun.noise == 0 or myrun.devo_time == inf:
+            suffix = print_devo_time(default_devo_time)
+
     elif samples:
         old = print_samples(default_samples)
         new = print_samples(samples)
@@ -964,7 +1012,10 @@ def get_replaced_filename(
         old = print_devo_time(default_devo_time)
         new = print_devo_time(devo_time)
 
-    return filename.replace(old, new)
+    else:
+        return filename
+
+    return filename.replace(old, new) + suffix
 
 def get_replaced_suffix(filename, samples=[], devo_times=[]):
 
@@ -974,7 +1025,7 @@ def get_replaced_suffix(filename, samples=[], devo_times=[]):
     filenames += [get_replaced_filename(filename, devo_time=devo_time)
                   for devo_time in devo_times]
 
-    return unique(filenames)
+    return set(filenames) if filenames else [filename]
 
 def get_suffix(
         samples=None, full_enum=False, symm=False, stable=False, binary=False,
@@ -1104,8 +1155,8 @@ def print_N(bits):
 def print_c(density, precision):
     return '_c_%s' %print_density(density, precision)
 
-def print_min(min):
-    return '_min_%s' %[min]
+def print_min(min_):
+    return '_min_%s' %[min_]
 
 def print_dim(dim):
     return '_dim_%s' %[dim]
@@ -1135,9 +1186,9 @@ def print_run(run):
 def print_samples(samples):
     return print_generations(samples, False, False).replace('_G', '-n')
 
-def get_filename(bit=N, density=c, min=-1., dim=2, noise=0, precision=2):
+def get_filename(bit=N, density=c, min_=-1., dim=2, noise=0, precision=2):
     return ('-N_%s_c_%s_min_%s_dim_%s-noise%s-' %
-            ([bit], print_density(density, precision), [min], [dim], noise))
+            ([bit], print_density(density, precision), [min_], [dim], noise))
 
 def get_noise_run_prefix(noise_function, noise, noise_time):
     prefix = ''

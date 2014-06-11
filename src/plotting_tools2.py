@@ -6,7 +6,7 @@ if sys.platform == 'darwin':
     from mpl_toolkits.mplot3d import Axes3D
     import scikits.bootstrap as bootstrap
     import pandas as pd
-    #from ggplot import *
+    import ggplot
     import colorbrewer
 import numpy.ma as ma
 from string import uppercase
@@ -17,6 +17,9 @@ from classes3 import *
 import shortnames
 reload(shortnames)
 from shortnames import *
+
+# load rcParams for specific journal
+import src.plos as plos
 
 #########################################################
 ## PLOTTING: HISTOGRAMS AND IMAGES AUXILIARY FUNCTIONS ##
@@ -136,17 +139,19 @@ G_string   = 1000
 ## Figure parameters
 formats      = {'plos': 'pdf', None: 'pdf'} #eps
 dpis         = {'plos': 300, 'bmc': 600, None: 300}
-fontsizes   = {'plos': 12,  'bmc': 12,  None: 10}
-fontnames   = {'plos': 'Arial',  'bmc': '',  None: 'Bitstream Vera Sans'}
+fontsizes    = {'plos': 12,  'bmc': 12,  None: 10} #plos: 8-12 point
+fontnames    = {'plos': 'Times',#'Arial 'Symbol'],
+               'bmc': '',  None: 'Bitstream Vera Sans'}
 #fontweight = 'bold'
 panel_labels = {'plos': uppercase, None: uppercase}
 fig_prefixes = {'plos': '', None: ''}
-fig_widths   = {'plos': [3.27, 4.86, 6.83], None: [8, 12, 16]}
-fig_height   = 6.
+fig_widths   = {'plos': [3.27, 6.83, 6.83], None: [8, 12, 16]}
+fig_height   = 6.#9.19
 # fig.get_size_inches(); fig.set_size_inches(w,h)
 screen_size  = {'macbook': (16., 8.775), 'imac': (24., 13.775), None:None}
 bbox         = 'tight'
 pad_inches   = 0.1
+golden_mean = (sqrt(5)-1.0)/2.0         # Aesthetic ratio
 
 #rcParams['axes.color_cycle']
 #color = ''
@@ -156,8 +161,33 @@ colors = {None: ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'darkorange', 'sienna',
 markers    = ['o', 's', 'v', 'd', '*', '^', 'x', '+', 'p', 'h']
 linestyles = ['-', '--', '-.', ':']
 span_linestyles = ['solid', 'dashed', 'dashdot', 'dotted']
-line_width = 1
+linewidth = 1
 marker_size = 8
+
+# Customizing matplotlib: Dynamic rc settings
+def set_custom_rcParams(journal, experiment, n_cols=1):
+
+    # figure size in inches (depends on number of columns)
+    figwidth = journal.figure.pop('figwidth', (8,12))[n_cols-1]
+    aspct_ratio = journal.figure.pop('aspct_ratio', 3./4)
+    figheight = journal.figure.pop('figheight', figwidth*aspct_ratio)
+    journal.figure['figsize'] = (figwidth, figheight)
+
+    # default directory in savefig dialog box
+    journal.savefig['directory'] = get_figs_save_dir('', experiment)
+
+    matplotlib.rc('lines',   **journal.lines)
+    matplotlib.rc('patch',   **journal.patch)
+    matplotlib.rc('font',    **journal.font)
+    matplotlib.rc('axes',    **journal.axes)
+    matplotlib.rc('grid',    **journal.grid)
+    matplotlib.rc('legend',  **journal.legend)
+    matplotlib.rc('figure',  **journal.figure)
+    matplotlib.rc('savefig', **journal.savefig)
+
+def reset_default_rcParams():
+    matplotlib.rcdefaults()
+
 
 '''def set_fig_params(experiment = None, journal = None, prefix = None, n_col = 0):
     global fig_prefix, fontsize, dpi, fig_width, save_dir, format, color
@@ -179,10 +209,10 @@ marker_size = 8
 
     ## Poster
     if prefix == 'poster':
-        line_width = 2
-        rc("axes",  lw = line_width)
-        rc("lines", lw = line_width, mew = line_width, markersize = marker_size)
-        rc("font",  size = fontsize)
+        linewidth = 2
+        rc("axes",  lw=linewidth)
+        rc("lines", lw=linewidth, mew=linewidth, markersize=marker_size)
+        rc("font",  size=fontsize)
 
     #else:
     #    rcdefaults()
@@ -234,7 +264,8 @@ def set_plot_kwargs(
         x_scale='linear', y_scale='linear',
         labels=None, n_hist=2, n_bins=0, sub=0, journal=None,
         y_ticks=None, ax=None, x_ticklabels=None, y_ticklabels=None,
-        loc=0, markerscale=None, labelspacing=None, multi_image=False,
+        loc='best', fancybox=True, markerscale=None, labelspacing=None,
+        multi_image=False,
         panel_label='', panel_label_loc=2, panel_label_offset=.04,
         _grid=False, elev=None, azim=None, z_label=None,
         x_lim=None, y_lim=None, z_lim=None):
@@ -260,7 +291,8 @@ def set_plot_kwargs(
         if labels:
             leg = get_ax_functions('legend', ax)(labels)
         leg = get_ax_functions('legend', ax)(
-            loc=loc, markerscale=markerscale, labelspacing=labelspacing)
+            loc=loc, markerscale=markerscale, labelspacing=labelspacing,
+            fancybox=fancybox)
         if leg:
             for t in leg.get_texts():
                 t.set_fontsize(fontsizes[journal]) # the legend text fontsize
@@ -288,16 +320,7 @@ def set_plot_kwargs(
 
     # multi-panel figures
     if panel_label:
-        # upper right or upper left
-        if panel_label_loc == 1 or panel_label_loc == 2:
-            y = 1 - panel_label_offset
-            if panel_label_loc == 1:
-                x = 1 - panel_label_offset
-            elif panel_label_loc == 2:
-                x = 0 + panel_label_offset
-        ax.text(
-            x, y, panel_label, fontsize=fontsizes[journal],
-            fontweight='bold', transform=ax.transAxes)
+        set_panel_labels(ax, panel_label, panel_label_loc, panel_label_offset)
 
     # 3d plots
     if elev and azim:
@@ -311,6 +334,33 @@ def set_plot_kwargs(
 
     if not multi_image:
         draw()
+
+
+# multi-panel figures
+def set_panel_labels(ax, panel_label, panel_label_loc=2, panel_label_offset=.04):
+    # upper right or upper left
+    if panel_label_loc == 1 or panel_label_loc == 2:
+        y = 1 - panel_label_offset
+        if panel_label_loc == 1:
+            x = 1 - panel_label_offset
+        elif panel_label_loc == 2:
+            x = 0 + panel_label_offset
+    # upper left outside the box
+    elif panel_label_loc == -1:
+        x, y = -0.15, 1.05
+    ax.text(x, y, panel_label, fontweight='bold', transform=ax.transAxes)
+
+# from http://blog.olgabotvinnik.com/
+# Remove top and right axes lines ("spines")
+def remove_spines(ax, spines_to_remove=['top', 'right']):
+    for spine in spines_to_remove:
+        ax.spines[spine].set_visible(False)
+
+# Get rid of ticks. The position of the numbers is informative enough of
+# the position of the value.
+def remove_ticks(ax):
+    ax.xaxis.set_ticks_position('none')
+    ax.yaxis.set_ticks_position('none')
 
 def plot_or_errorbar(
         x, y, error=False, yerr=None,
@@ -362,7 +412,7 @@ def label_hist(
     for i in range(start, n_hist):
         rec = axes.get_children()[2 + n_bins*i]
         rec.set_label(labels[i])
-    leg = legend(loc = loc)
+    leg = legend(loc=loc)
 
     if leg:
         # the legend text fontsize
@@ -1964,7 +2014,9 @@ def new_stable_states_vs_k(
         myrun_fname, dims=None, i=0, width=0,
         fig=None, color='b', normed=False, marginal=False,
         experiment='dims', bits=None, noises=None, potential=False,
-        plotting_=True, ls='o', x_label='', title_='', label='',
+        n=None, samples=[1e8, 1e6], devo_times=[16, 32, 100, 200],
+        plotting_=True, ls='o', mec=None, jitter=0,
+        x_label='', title_='', label='', noise_label='noise',
         y_scale='linear', fig_name='', verbose=False):
 
     potential_label = 'potential'
@@ -2009,7 +2061,7 @@ def new_stable_states_vs_k(
         potential = False
 
     if not label:
-        label = get_myrun_label(myrun)
+        label = get_myrun_label(myrun, noise_label)
 
     if myrun.experiment == 'phenotypes':
         func_load = load_stable_states_from_txt_file
@@ -2020,7 +2072,9 @@ def new_stable_states_vs_k(
         y_label = 'stability'
 
     # load data
-    y = [func_load(fname + '.tsv', verbose=verbose) for fname in fnames]
+    y = [func_load(fname + '.tsv', n=n, samples=samples, devo_times=devo_times,
+                   verbose=verbose)
+         for fname in fnames]
 
     if normed:
         y /= (dims**bits).astype(float)
@@ -2036,13 +2090,13 @@ def new_stable_states_vs_k(
         if not fig:
             fig = figure()
 
+        if potential:
+            plot(x, dims**bits, 'k--', label=potential_label)
+
         if width:
             bar(x + i*width, y, width, color=color, label=label)
         else:
-            plot(x, y, ls, color=color, label=label)
-
-        if potential:
-            plot(x, dims**bits, 'k--', label=potential_label)
+            plot(fixed_jitter(x, jitter), y, ls, mec=mec, color=color, label=label)
 
         if not title_ and not i:
             title_ = get_myrun_title(myrun, experiment)
@@ -2056,36 +2110,33 @@ def new_stable_states_vs_k(
 
 
 def stable_states_vs_k_vs_all(
-        fnames, color_scheme=None, dims=None,
-        potential=True, normed=False, marginal=False,
-        experiment='dims', bits=None, labels=None,
+        fnames, n=None, devo_times=[16, 32, 100, 200], samples=[1e8, 1e6],
+        colormap=None, dims=None, potential=True, normed=False, marginal=False,
+        experiment='dims', bits=None, labels=None, noise_label='noise',
         ls='o', y_scale='linear', title_='', journal='plos',
-        x_label='', y_label='', fig=None, fig_name='',
+        x_label='', y_label='', pot_lbl='potential', fig=None, fig_name='',
         verbose=False, save_=True):
 
-    potential_label = 'potential'
-
-    n = len(fnames)
-
     if not labels:
-        labels = ['']*n
+        labels = ['']*len(fnames)
 
-    if color_scheme:
-        if type(color_scheme) is dict:
-            color_scheme = array(color_scheme[n])/255.#colors[journal]
+    if colormap:
+        if type(colormap) is dict:
+            colormap = array(colormap[len(fnames)])/255.#colors[journal]
     else:
-        color_scheme = array(colorbrewer.OrRd[n])/255.#colors[journal]
+        colormap = array(colorbrewer.OrRd[len(fnames)])/255.#colors[journal]
 
+    # if width == 0: scatter plot else bar plot in new_stable_states_vs_k()
     if normed or marginal:
         width = 0
-    elif n < 5:
+    elif len(fnames) < 5:
         width = 0
-    elif n == 5:
+    elif len(fnames) == 5:
         width = .15
-    elif n == 7:
+    elif len(fnames) == 7:
         width = .11
 
-    bar_xoffset = n/2.
+    bar_xoffset = len(fnames)/2.
     hline_xoffset = .4
     text_yoffset = 7
 
@@ -2107,27 +2158,28 @@ def stable_states_vs_k_vs_all(
         if not x_label:
             x_label = 'network size, N'
 
-    if bits == 2:
-        text_yoffset = .1
-
-    elif bits == 3:
-        text_yoffset = 1
+    if isinstance(bits, int):
+        if bits == 2:
+            text_yoffset = .1
+        elif bits == 3:
+            text_yoffset = 1
 
     if not fig:
         fig = figure()
 
     data = array([new_stable_states_vs_k(
         fname, dims, i - bar_xoffset, width, fig, color, normed, marginal,
-        experiment, bits, ls=ls, label=label, verbose=verbose)
+        experiment, bits, n=n, samples=samples, devo_times=devo_times,
+        ls=ls, label=label, noise_label=noise_label, verbose=verbose)
                   for i, (fname, color, label)
-                  in enumerate(zip(fnames, color_scheme, labels))])
+                  in enumerate(zip(fnames, colormap, labels))])
 
     fig = data[0][0]
     data = data.T[1]
     heights = array([array(y) for y in data])
 
     axis_ = list(axis())
-    if bits == 2:
+    if isinstance(bits, int) and bits == 2:
         axis_[-1] += 7
 
     if potential:
@@ -2135,11 +2187,11 @@ def stable_states_vs_k_vs_all(
         if width:
             hlines(
                 y, x - hline_xoffset, x + hline_xoffset,
-                color='k', linestyles='--', label=potential_label)
+                color='k', linestyles='--', label=pot_lbl)
             [text(w, h + text_yoffset, '%d'%h, ha='center', va='bottom')
              for w, h in zip(x, y) if h < axis_[-1]]
         else:
-            plot(x, y, 'k--', label=potential_label)
+            plot(x, y, 'k--', label=pot_lbl)
 
     # set_plot_kwargs
     myrun = cPickle.load(open(logs_dir + fnames[0] + '.run'))
@@ -2175,35 +2227,218 @@ def stable_states_vs_k_vs_all(
 
 
 def stable_states_vs_k_vs_meta(meta_myruns, color=None, save_=True):
-    return [stable_states_vs_k_vs_all(fnames, color, save_=save_)
+    return [stable_states_vs_k_vs_all(fnames, colormap=color, save_=save_)
             for fnames in meta_myruns]
 
-def stable_states_vs_N(bits=arange(4,14), fname='N4bun8inf',
-                       y_scale='log', fig_name='stable_states_vs_N'):
-    return new_stable_states_vs_k(
-        fname, experiment='bits', bits=bits, potential=True, ls='o',
-        label='visible', y_scale=y_scale, fig_name=fig_name)
+def stable_states_vs_N(
+        bits=arange(4,20), fname='N4bun8inf', n=None,
+        samples=[1e8, 1e6], devo_times=[16, 32, 100, 200], fig=None,
+        color='b', potential=True, label='visible', noise_label='noise',
+        ls='o', mec=None, jitter=0, fig_name='stable_states_vs_N',
+        verbose=False, y_scale='log'):
 
+    return new_stable_states_vs_k(
+        fname, fig=fig, color=color, experiment='bits', bits=bits,
+        potential=potential, n=n,
+        samples=samples, devo_times=devo_times,
+        ls=ls, mec=mec, jitter=jitter,
+        label=label, noise_label=noise_label,
+        y_scale=y_scale, fig_name=fig_name, verbose=verbose)
+
+# scatter plot
 def stable_states_vs_N_vs_noise(
+        fnames=myrun_noiseN4ux, n=None, samples=[], devo_times=[],
+        fig=None, ls='o-', mec=None, jitter=0.3,
+        pot_lbl='potential',  noise_lbl='noise', samp_lbl='samples',
+        experiment='transition', fig_name='', save_=False, verbose=False):
+
+    bits = arange(4,20)
+
+    myrun = cPickle.load(open(logs_dir + fnames[-1] + '.run'))
+
+    if myrun.noise and len(fnames) > 2:
+        colormap = array(colorbrewer.OrRd[len(fnames)])/255.
+    else:
+        colormap = colors[None]
+
+    if not fig:
+        fig = figure()
+
+    # potential
+    plot(bits, 2**bits, 'k--', label=pot_lbl)
+
+    # sample size
+    if n:
+        xmin, xmax, _, _ = axis()
+        # true sample size is only approximately n
+        x = get_int_datapoints(0, log10(1e8), 100)
+        y = find_nearest(x, n)
+        hlines(y, xmin, xmax, 'k', '-.', label=samp_lbl)
+
+    for fname, color in zip(fnames, colormap):
+        fig, y = stable_states_vs_N(
+            bits, fname, n, samples, devo_times,
+            fig, color, False, '', noise_lbl, ls, mec, jitter, '', verbose)
+
+    # set title
+    if len(devo_times) == 1:
+        myrun.devo_time = devo_times[0]
+    title(get_myrun_title(myrun, experiment, n, False))
+
+    if save_:
+        fig_name = get_transition_fig_name(myrun, n, fig_name, experiment)
+        save_fig(fig_name, get_figs_save_dir('', experiment))
+
+    return fig
+
+# scatter plot
+def stable_states_vs_k_vs_noise(
+        fnames, n=None, samples=[], devo_times=[],
+        fig=None, ls='o-', mec=None, jitter=0.3, y_scale='log', hline=False,
+        pot_lbl='potential',  noise_lbl='noise', samp_lbl='samples',
+        experiment='transition', fig_name='', save_=False, verbose=False):
+
+    dims = arange(2,10)
+
+    myrun = cPickle.load(open(logs_dir + fnames[-1] + '.run'))
+
+    if myrun.noise and len(fnames) > 2:
+        colormap = array(colorbrewer.OrRd[len(fnames)])/255.
+    else:
+        colormap = colors[None]
+
+    if not fig:
+        fig = figure()
+
+    # potential
+    plot(dims, dims**myrun.bits, 'k--', label=pot_lbl)
+
+    # sample size
+    if n:
+        n = 10**n
+        if hline:
+            xmin, xmax, _, _ = axis()
+            # true sample size is only approximately n
+            x = get_int_datapoints(0, log10(1e8), 100)
+            y = find_nearest(x, n)
+            hlines(y, xmin, xmax, 'k', '-.', label=samp_lbl)
+
+    for fname, color in zip(fnames, colormap):
+        fig, y = new_stable_states_vs_k(
+            fname, fig=fig, color=color, n=n,
+            samples=samples, devo_times=devo_times,
+            ls=ls, mec=mec, jitter=jitter, noise_label=noise_lbl,
+            y_scale=y_scale, verbose=verbose)
+
+    # set title
+    if len(devo_times) == 1:
+        myrun.devo_time = devo_times[0]
+    title(get_myrun_title(myrun, experiment, n, False))
+
+    if save_:
+        fig_name = get_transition_fig_name(myrun, n, fig_name, experiment)
+        save_fig(fig_name, get_figs_save_dir('', experiment))
+
+    return fig
+
+# bar chart
+def stable_states_vs_N_vs_noise_bar(
         bits=arange(4,11), fig_name='stable_states_vs_N_vs_noise'):
     return stable_states_vs_k_vs_all(
-        myrun_noiseN4s, colorbrewer.OrRd,
+        myrun_noiseN4s, colormap=colorbrewer.OrRd,
         experiment='bits', bits=bits, fig_name=fig_name)
 
 def stability_vs_k_vs_noise():
     return stable_states_vs_k_vs_all(
-        myrun_stabilityN4, colorbrewer.OrRd, potential=False)
+        myrun_stabilityN4, colormap=colorbrewer.OrRd, potential=False)
 
 def percent_visible_states(
         fnames, color=None, x_label='', labels=[''], title_='', ls='--o',
         fig_name='percent_visible_states', save_=False):
     return stable_states_vs_k_vs_all(
-        fnames, color, potential=False, normed=True, labels=labels,
+        fnames, colormap=color, potential=False, normed=True, labels=labels,
         title_=title_, ls=ls, x_label=x_label, fig_name=fig_name, save_=save_)
 
 def marginal_visible_states(fnames, color=None, save_=False):
     return stable_states_vs_k_vs_all(
-        fnames, color, potential=False, marginal=True, save_=save_)
+        fnames, colormap=color, potential=False, marginal=True, save_=save_)
+
+def plot_access_vs_samples_vs_noise(
+        fnames=myrun_noiseN4s, k=4, devo_times=None, hline=True, fig=None,
+        verbose=False):
+
+    if not fig:
+        fig = figure()
+
+    colormap = array(colorbrewer.OrRd[len(fnames)])/255.
+
+    for fname, color in zip(fnames, colormap):
+        # load myrun file with filename and parameters
+        myrun = cPickle.load(open(logs_dir + fname + '.run'))
+        # replace myrun.dim with k in filename
+        filename = get_replaced_filename(myrun=fname, dim=k)
+        # get all filenames with parameter substitution
+        filenames = get_replaced_suffix(filename, [], devo_times)
+        # load all runs
+        #return [loadtxt(filename + '.tsv', int) for filename in filenames]
+        data = []
+        for filename in filenames:
+            _data = load_file(filename + '.tsv', verbose, lambda x: loadtxt(x, int))
+            if any(_data):
+                data.append(_data)
+        # concatenate and mask invalid (there's actually no NaNs, but see below)
+        data = concatenate(data)
+
+        # mask the first point of runs #2 and #3 to avoid connecting straight lines
+        x = data.T[0]
+        y = data.T[1]
+        x = ma.masked_where(x==1, x)
+        x.mask[0] = False
+        y = ma.masked_where(x.mask, y)
+
+        label = get_myrun_label(myrun, '')
+        plot(x, y, c=color, lw=1.5, label=label)
+
+        # print sample size
+        if verbose:
+            print data.T[0][-1]
+
+    # set_plot_kwargs
+    xscale('log')
+    xlabel(r'$\lambda$')
+    ylabel(r'$\mathcal{U}$')
+    title('stable' if myrun.stable else 'random')
+    legend(loc='best', fancybox=True, title=r'$\sigma$')
+    gca().set_axis_bgcolor("#E5E5E5")
+
+    # dashed lines with parameters/limits (e.g. sample size)
+    if hline:
+        ## hlines and vlines
+        # max visible states (state space size)
+        #myrun.dim = k
+        umax = k**myrun.bits
+        xmin, xmax, _, _ = axis()
+        hlines(umax, xmin, xmax, 'k', '-.')
+        label = r'$\mathcal{U}_{max} = k^N$'
+        annotate(label, (xmax,umax), xytext=(-65, 2),
+                 textcoords='offset points', va='bottom')
+
+        # max number of matrices (genotype size)
+        wmax = 2**myrun.bits**2
+        _, _, ymin, ymax = axis()
+        vlines(wmax, ymin, umax, 'k', ':')
+        label = r'$2^{N^2}$'
+        annotate(label, (wmax,umax), xytext=(2, -30),
+                 textcoords='offset points', ha='left')
+
+        # max discovery rate (u==lambda)
+        x = y = [1, umax]
+        plot(x, y, 'k--')
+        label = r'$\mathcal{U} = \lambda$'
+        annotate(label, (umax,umax), xytext=(-12, -30),
+                 textcoords='offset points', ha='right')
+
+    return fig
 
 def stable_states_overrepresentation(
         dim=3, fnames=('N4bso1e-100n8200'),
@@ -3614,7 +3849,7 @@ def plot_evolution_oversampling(
     #fill_between(ps_all, y+yerr, y-yerr, facecolor=color, alpha=0.5)
 
     # scatterplot: add random noise in x to separate marks
-    pa = [[scatter(add_random_noise(x), y, size, color, marker, alpha=0.5)
+    pa = [[scatter(fixed_jitter(x), y, size, color, marker, alpha=0.5)
            for y in p[:samples] if y]
           for x, p in zip(x, robustness)]
     del pa
@@ -4270,7 +4505,7 @@ def compare_errors(
         stats_, shortnames, errors=error_types, n_datapoints=100,
         label_function=str, threshold=.67, runs_axis=0,
         colors=colors[None], markers=markers, linestyles=linestyles,
-        line_width=line_width, y_label='std', title_='', x_scale='log',
+        linewidth=linewidth, y_label='std', title_='', x_scale='log',
         fig_width=fig_widths[None][2], fig_height=fig_height*1.2,
         suffix='', experiment='pop.evolution',
         save_dir=get_figs_save_dir(None), save_=False):
@@ -4309,7 +4544,7 @@ def compare_errors(
             label += suffix
             # plot
             plot(
-                x, yerr, color + linestyle + marker, lw=line_width, label=label)
+                x, yerr, color + linestyle + marker, lw=linewidth, label=label)
 
     if not title_:
         title_  = str(shortnames)
@@ -4410,7 +4645,7 @@ def heatmap_conservation(
 
 def multi_heatmap_conservation(
         shortnames, abs=array,
-        cmap=None, aspect='auto', norm=None,interpolation='nearest', origin=None,
+        cmap=None, aspect='auto', norm=None, interpolation='nearest', origin=None,
         stat='conservation', experiment='autoregulation',
         fig_name='average_matrix', journal=None, n_col=1,
         label_function=get_model_label_text,

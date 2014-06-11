@@ -287,17 +287,31 @@ def get_myrun_matrices(myrun):
 
     return ' '.join((stability, weights))
 
-def get_noise_label(noise, noise_function='random_noise', noise_time='before'):
+def get_noise_label(
+        noise, noise_function='random_noise', noise_time='before',
+        noise_chr='noise', bits=4):
     #noises = [1e-100, .01, .05, .1, .15, .2, .25]
     #labels = [
      #   'no noise', 'noise=0.01', 'noise=0.05', 'noise=0.10', 'noise=0.15',
       #  'noise=0.2', 'noise=0.25']
 
-    if noise_function == 'random_noise' or noise_time == 'shmulevich':
+    if noise_function == 'random_noise':
         if noise == 1e-100:
-            return 'no noise'
-        elif noise:
-            return 'noise=%.2f' %noise
+            noise = 0
+
+        if not noise_chr:
+            return '%g'%noise
+
+        elif noise_chr == 'noise':
+            if not noise:
+                return 'no noise'
+            else:
+                return 'noise=%.2f' %noise
+        else:
+            return r'$%s=%.2f$' %(noise_chr, noise)
+
+    elif noise_time == 'shmulevich':
+        return '%.2g'%(1 - (1-noise)**bits)
 
     else:
         #flips_label = ' '.join(noise_function.split('_')[-2:])
@@ -308,35 +322,77 @@ def get_noise_label(noise, noise_function='random_noise', noise_time='before'):
         else:
             return ' '.join((str(noise), 'flips'))
 
-def get_myrun_label(myrun):
+def get_myrun_label(myrun, noise_label='noise'):
     if myrun.noise:
         return get_noise_label(
-            myrun.noise, myrun.noise_function, myrun.noise_time)
+            myrun.noise, myrun.noise_function, myrun.noise_time, noise_label)
     else:
         return get_myrun_matrices(myrun)
 
-def get_myrun_title(myrun, experiment='dims'):
+def get_myrun_title(myrun, experiment='dims', n=None, full_title=True):
 
-    matrices = get_myrun_matrices(myrun) + ' matrices'
+    if 'transition' in experiment and n:
+        samples = 'max samples = %g'%n
+
+        if not myrun.noise:
+            matrices = ''
+        else:
+            matrices = '\n' + get_myrun_matrices(myrun) + ' matrices'
+
+    else:
+        samples = ''
+        matrices = get_myrun_matrices(myrun) + ' matrices'
 
     if 'dims' in experiment:
-        matrices += ' of size N = %d' %myrun.bits
+        if full_title:
+            matrices += ' of size '
+        matrices += 'N = %d' %myrun.bits
 
-    if 'overrepresentation' in experiment:
+    if ('overrepresentation' in experiment or
+        'transition' in experiment):
         matrices += ', k = %d' %myrun.dim
 
     if myrun.degree < myrun.bits:
-        matrices += ' and density %.1f' %myrun.density
+        if full_title:
+            matrices += ' and density '
+        matrices += 'c = %.1f' %myrun.density
 
     if myrun.min == 0:
         matrices += ', min = 0'
 
     noise_func = ''
-    if myrun.noise_function != 'random_noise':
-        noise_func = ''.join(('\n',
-                              ' '.join(myrun.noise_function.split('_')[-2:])))
+    if myrun.noise:
 
-    if myrun.noise_time == 'after':
-        noise_func = '\nnoise after matrix multiplication'
+        if myrun.noise_function != 'random_noise':
+            noise_func = ''.join(('\n', ' '.join(
+                myrun.noise_function.split('_')[-2:])))
 
-    return matrices + noise_func
+        if myrun.noise_time == 'after':
+            noise_func = '\nnoise after matrix multiplication'
+
+        elif myrun.noise_time == 'shmulevich':
+            noise_func += ', Shmulevich'
+
+        noise_func += ', T = %d' %myrun.devo_time
+
+    return samples + matrices + noise_func
+
+def get_transition_fig_name(myrun, n, fig_name='', experiment='transition'):
+
+    matrices = get_myrun_matrices(myrun).replace(' ', '_')
+
+    if myrun.noise:
+        if 'flip' not in fig_name:
+            fig_name += 'with_noise'
+    else:
+        fig_name += 'without_noise'
+
+    if myrun.min == 0:
+        fig_name += '-m0'
+
+    fig_name += '-T%d' %myrun.devo_time
+
+    if n:
+        fig_name += '-n%g'%n
+
+    return '-'.join((experiment, matrices, fig_name))

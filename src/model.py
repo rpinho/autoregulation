@@ -692,9 +692,9 @@ def filter_symm_genotypes(genotypes):
 
 # integer-valued (-1,1) or (0,1): A. Wagner and Siegal.
 # Note: fraction of repressing (-1 or 0) given by parameter rep_fraction = 1-p
-def spin_phenotype(bits=N, min=-1., rep_fraction=1-p, dtype=Dtype):
+def spin_phenotype(bits=N, min_=-1., rep_fraction=1-p, dtype=Dtype):
     phenotype = ones(bits, dtype=dtype)
-    phenotype[permutation(bits)[:rep_fraction*bits]] = min
+    phenotype[permutation(bits)[:rep_fraction*bits]] = min_
     # ATTENTION: has to be permutation because randint produces repeated numbers
     return phenotype
 
@@ -704,8 +704,8 @@ def int_phenotype(base, bits=N, dtype=Dtype):
     return array([base[randint(base.size)] for i in range(bits)], dtype=dtype)
 
 # real-valued [min, 1]
-def real_phenotype(bits=N, min=-1., **args):
-    return array(uniform(min, 1, bits))
+def real_phenotype(bits=N, min_=-1., **args):
+    return array(uniform(min_, 1, bits))
 
 # general caller function
 def generate_vector_phenotype(
@@ -1224,16 +1224,21 @@ def insert_and_delete(genotype, ins_rate=uA, del_rate=uD):
 ####################
 
 def random_noise(phenotype, noise, noise_size, **args):
+    # NOTE: np.random.normal(mu, sigma, size), sigma (scale) == std
     return phenotype + array(
         normal(0, noise, noise_size), dtype=phenotype.dtype)
 
 def get_phenotype_mutating(bits, n_flips, noise_time=''):
     if noise_time == 'shmulevich':
         # random number of flips (from Shmulevich2002b)
-        return randint(2, size=bits).nonzero()[0]# == 1
+        # NOTE: this is NOT uniform!!!
+        #return randint(2, size=bits).nonzero()[0]# == 1
+        # this one is uniform:
+        n_flips = randint(1, bits+1)
     else:
         # deterministic number of flips
-        return permutation(bits)[:n_flips]
+        pass
+    return permutation(bits)[:n_flips]
 
 # call with .copy() if you do not want to replace
 # not garanteed to be always different:
@@ -1742,9 +1747,9 @@ def noise_ensemble(
     return ensbl_phenotypes
 
 def noise_interval(
-        ensemble, max, step, gpmap=sigmoid2, samples=n_perturb, stable='s'):
+        ensemble, max_, step, gpmap=sigmoid2, samples=n_perturb, stable='s'):
 
-    noises = arange(step, max, step)
+    noises = arange(step, max_, step)
     n = len(noises)
     size = len(ensemble)
 
@@ -2379,7 +2384,7 @@ def test_devo_funtions(
 
 #
 def test_devo_funtions2(
-        bits=N, noise=0, devo_time=M, dim=2, min=-1., density=c, binary=False,
+        bits=N, noise=0, devo_time=M, dim=2, min_=-1., density=c, binary=False,
         converge_time=T, converge_threshold=converge):
     devo_function = devo
     genotype_function  = generate_genotype if not binary else spin_genotype
@@ -2387,7 +2392,7 @@ def test_devo_funtions2(
         phenotype_function = generate_decimal_phenotype
     else:
         phenotype_function = generate_vector_phenotype
-    base, basename, jumps = get_base(dim, bits, min)
+    base, basename, jumps = get_base(dim, bits, min_)
     gpmap = get_gpmap(base, basename, density, bits, binary, jumps)
     initial, genotype = (phenotype_function(base, bits),
                          genotype_function(bits, density))
@@ -2404,7 +2409,7 @@ def test_devo_funtions2(
 
 # studying a cut-off for devo time
 def path_length_vs_N(
-        bits=N, dim=2, min=-1., density=c, noise=0, samples=1e3, binary=False,
+        bits=N, dim=2, min_=-1., density=c, noise=0, samples=1e3, binary=False,
         converge_time=T, converge_threshold=converge, devo_time=M):
 
     devo_function = devo
@@ -2413,7 +2418,7 @@ def path_length_vs_N(
         phenotype_function = generate_decimal_phenotype
     else:
         phenotype_function = generate_vector_phenotype
-    base, basename, jumps = get_base(dim, bits, min)
+    base, basename, jumps = get_base(dim, bits, min_)
     gpmap = get_gpmap(base, basename, density, bits, binary, jumps)
 
     filename = data_dir + 'path_leng_vs_N%d.txt' %bits
@@ -2463,12 +2468,12 @@ def path_length_vs_N2(
 # studying a cut-off for devo time in brent:
 # the relationship between (maximum) power and length (transient time)
 def power_vs_mu(
-        bits=N, dim=2, min=-1., density=c, samples=1e3, binary=False):
+        bits=N, dim=2, min_=-1., density=c, samples=1e3, binary=False):
 
     devo_function = devo
     genotype_function = generate_genotype if not binary else spin_genotype
     phenotype_function = generate_decimal_phenotype
-    base, basename, jumps = get_base(dim, bits, min)
+    base, basename, jumps = get_base(dim, bits, min_)
     gpmap = get_gpmap(base, basename, density, bits, binary, jumps)
 
     filename = data_dir + 'power_vs_mu_N%d.txt' %bits
