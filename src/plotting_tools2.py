@@ -157,7 +157,7 @@ golden_mean = (sqrt(5)-1.0)/2.0         # Aesthetic ratio
 #color = ''
 colors = {None: ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'darkorange', 'sienna',
                  'lime', 'magenta', 'indigo', 'goldenrod', 'gray', 'tomato'],
-          'plos': ['k', 'r', 'b', 'g', 'darkorange']}
+          'plos': ['k', 'r', 'b', 'g', 'darkorange', 'gray']}
 markers    = ['o', 's', 'v', 'd', '*', '^', 'x', '+', 'p', 'h']
 linestyles = ['-', '--', '-.', ':']
 span_linestyles = ['solid', 'dashed', 'dashdot', 'dotted']

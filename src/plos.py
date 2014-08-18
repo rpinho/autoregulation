@@ -44,7 +44,7 @@ figure = {'figwidth'   : (8, 12), # (1-column, 2-column)
 }
 ### SAVING FIGURES
 savefig = {'dpi'       : 300,      # figure dots per inch
-           'format'    : 'png',    # png, ps, pdf, svg
+           'format'    : 'eps',    # png, ps, pdf, svg
            'bbox'      : 'tight',  # 'tight' or 'standard'.
            'pad_inches': 0.1      # Padding to be used when bbox is set to 'tight'
 #savefig.directory   : ~        # default directory in savefig dialog box,

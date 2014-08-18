@@ -135,9 +135,14 @@ myrun_noiseN4m0s10000x = ['N4m0bsn8inf'] + myrun_noiseN4m0s10000
 # ALTERNATIVE NOISE MODELS ##
 #############################
 # N = 4
-# noise_function = random_flip
+# random_flip
 myrun_noiseN4rf = ['N4bsrf1e-100n8100', 'N4bsrf1n8100', 'N4bsrf2n8100',
                    'N4bsrf3n8100', 'N4bsrf4n8100']
+
+# random_flip, unstable, min = 0
+myrun_noiseN4m0rfu = ['N4m0burf1e-100n8100', 'N4m0burf1n8100',
+                      'N4m0burf2n8100', 'N4m0burf3n8100',
+                      'N4m0burf4n8100']
 
 # noise_function = force_different_flip
 # noise_time = 'before'
@@ -149,10 +154,20 @@ myrun_noiseN4df = ['N4bsdf1e-100n8100', 'N4bsdf1n8100', 'N4bsdf2n8100',
 myrun_noiseN4nf = ['N4bsnf1e-100n8100', 'N4bsnf1n8100', 'N4bsnf2n8100',
                    'N4bsnf3n8100', 'N4bsnf4n8100']
 
+# neighbour_flip, unstable, min = 0
+myrun_noiseN4m0nfu = ['N4m0bunf1e-100n8100', 'N4m0bunf1n8100',
+                      'N4m0bunf2n8100', 'N4m0bunf3n8100',
+                      'N4m0bunf4n8100']
+
 # neighbour_flip, stable, min = 0
 myrun_noiseN4m0nfs = ['N4m0bsnf1e-100n8100', 'N4m0bsnf1n8100',
                       'N4m0bsnf2n8100', 'N4m0bsnf3n8100',
                       'N4m0bsnf4n8100']
+
+# force_different_flip, unstable, min = 0
+myrun_noiseN4m0dfu = ['N4m0budf1e-100n8100', 'N4m0budf1n8100',
+                      'N4m0budf2n8100', 'N4m0budf3n8100',
+                      'N4m0budf4n8100']
 
 # force_different_flip, stable, min = 0
 myrun_noiseN4m0dfs = ['N4m0bsdf1e-100n8100', 'N4m0bsdf1n8100',

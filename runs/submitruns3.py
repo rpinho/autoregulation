@@ -18,7 +18,7 @@ from runs.run3 import *
 script = '/runs/run3.py'
 
 # networks
-bits = range(5,20)
+bits = [4]#range(4,20)
 #list(get_int_datapoints(log10(3000), log10(10000), 4))[1:]
 densities = [c]#c#None
 degrees = [None]#None#'N-1'#2
@@ -35,10 +35,10 @@ act_fractions = [p]#[None] #[0., .1]#arange(0, 1.1, .1)
 # development process parameters
 #phe_decimal   = 1023
 mins = [0.]#, -1.]
-dims = [2]#range(2, 10)#k_dict(bits[0]) + 1)#[2]#[3]
+dims = [2]#range(3, 10)#k_dict(bits[0]) + 1)#[2]#[3]
 noises = [1e-100, .01, .05, .1, .15, .2, .25]#, .3, .35, .4, .45]
 #noise_function = 'random_noise'
-noise_function = 'force_different_flip'#neighbour_flip'#random_flip'#
+noise_function = 'random_flip'#force_different_flip'#neighbour_flip'#
 noise_time = 'before'#shmulevich'#after'#
 if 'flip' in noise_function and noise_time != 'shmulevich':
     noises = [1e-100, 1, 2, 3, 4]
@@ -104,7 +104,7 @@ selection = False # save pop before (False) or after (True) selection
 # autoregulation
 pop_size = P#1e3
 pop_stat_func = 'get_ind_stat'#'get_pop_stat'
-pop_stats = ['p', '1-p']#sign']#np', 'nq']#p']#, 's', '1-p']#, 'q', 'P', 'c']
+pop_stats = ['2p']#, '1-p']#sign']#np', 'nq']#p']#, 's', '1-p']#, 'q', 'P', 'c']
 #'p', '1-p', 'qp', 's' + ['l', 'f']
 #pop_stats     = ['robustness']#, 'survivability']#diff']#initials_all
 #pop_stats     = ['conservation']
@@ -134,7 +134,7 @@ deltas_in     = arange(.7, 1+delta, delta)[:-1]
 deltas_out    = array([.2])#arange(delta, 1+delta, delta)
 
 # new Evolution
-shortname = None#'m3r05p7'
+shortname = 'm3r05b'#None#'m3r05p7'
 if shortname:
     (models, periods, generations, sel_strengths, mut_rates, rec_rates, bits,
      densities, degrees, n_runs, precision, _filter, suffix, binary, graph,
@@ -150,6 +150,8 @@ delete_runs = []#[51, 72, 85, 87, 90]
 runs = delete(runs, [where(runs == run)[0] for run in delete_runs])
 if not shortname:
     samples = 1e8#0#65536#None
+else:
+    samples = None
 #generations = 1e6 + 10
 #mut_rates = rec_rates = [0]
 #suffix = ['-u0g%d' %(generations-1e6)]
@@ -159,8 +161,9 @@ if shortname:
         shortname, generations, _filter, n_datapoints)[:samples]
 else:
     datapoints = None #array([1e6])
-experiment = 'phenotypes'#-period_distribution'#stability'#'#path_length'#
-#pop.evolution'#pop.stats'#robustness_and_survivability'#qp.
+experiment = 'pop.stats'
+#phenotypes'#-period_distribution'#stability'#'#path_length'#
+#pop.evolution'#robustness_and_survivability'#qp.
 #initials'#stable.pop.evaluate'#final_vs_p'#.u0'#stable.pop.superfrankenmatrix'
 #survivability'#robustness'#autoregulation'#epistasis'#perturb_and_analyse'
 #'stability'#'scale_free_graph'#'distribution'

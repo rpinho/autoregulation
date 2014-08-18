@@ -310,6 +310,10 @@ def get_in_number_of_positive(genotype):
 def get_out_number_of_positive(genotype):
     return get_in_number_of_positive(genotype.T)
 
+def get_activating_fraction_length2_autoregulatory(genotype):
+    x = genotype * genotype.T
+    return get_activating_fraction(x[triu_indices_from(x,1)])
+
 
 
 ##############

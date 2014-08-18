@@ -688,7 +688,8 @@ def get_pop(
     if experiment != 'pop.evolution': filenames = filenames[::-1]
 
     for filename in filenames:
-        _dir = get_pop_dir(shortname, run, _dir)
+        if shortname not in _dir:
+            _dir = get_pop_dir(shortname, run, _dir)
         filename = _dir + filename.replace('pop.evolution', experiment)
         filename += print_run(run)
         fname1 = filename + print_generations(generations, precision=True)

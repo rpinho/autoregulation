@@ -173,11 +173,23 @@ def figureS3(_save=True):
 # NEW FIGURES - VICTOR ##
 #########################
 
-def figure2(fnames=[myrun_noiseN4u, myrun_noiseN4s], n=log10(15922),
+def savefig(fig, figname):
+    # NOTE: savefig is ignoring rcParams, don't know why..
+    # switching to manual as a workaround
+    _dir = matplotlib.rcParams['savefig.directory']
+    dpi = matplotlib.rcParams['savefig.dpi']
+    _format = matplotlib.rcParams['savefig.format']
+    _bbox = matplotlib.rcParams['savefig.bbox']
+    _pad_inches = matplotlib.rcParams['savefig.pad_inches']
+    fname = '.'.join((figname, _format))
+    fig.savefig(_dir + fname, dpi=dpi, format=_format, bbox_inches=_bbox,
+                pad_inches=_pad_inches)
+
+def figure1(fnames=[myrun_noiseN4m0u, myrun_noiseN4m0s], n=log10(102353),
             devo_times=[], verbose=False, save_=True):
 
     experiment = 'transition'
-    fig_name = 'figure2'
+    figname = 'figure1'
     x_label = 'N'
     y_label = r'$\mathcal{U}$'
     #noise_lbl = '\sigma' # no need to add r'$$' (already in get_noise_label())
@@ -221,26 +233,18 @@ def figure2(fnames=[myrun_noiseN4u, myrun_noiseN4s], n=log10(15922),
                     textcoords='data', va='bottom')
 
     if save_:
-        # NOTE: savefig is ignoring rcParams, don't know why..
-        # switching to manual as a workaround
-        _dir = matplotlib.rcParams['savefig.directory']
-        dpi = matplotlib.rcParams['savefig.dpi']
-        _format = matplotlib.rcParams['savefig.format']
-        _bbox = matplotlib.rcParams['savefig.bbox']
-        _pad_inches = matplotlib.rcParams['savefig.pad_inches']
-        fname = '.'.join((fig_name, _format))
-        fig.savefig(_dir + fname, dpi=dpi, format=_format, bbox_inches=_bbox,
-                    pad_inches=_pad_inches)
+        savefig(fig, figname)
 
     reset_default_rcParams()
     return fig
 
-def figure3(
-        fnames=[myrun_noiseN4u, myrun_noiseN4s], dim=4,
-        devo_times=[100, 101, 102], hline=True, verbose=True, save_=True):
+def figure2(
+        fnames=[myrun_noiseN4m0u, myrun_noiseN4m0s], dim=3,
+        devo_times=[], hline=True, verbose=True, save_=True):
 
     experiment = 'transition'
-    fig_name = 'figure3'
+    figname = 'figure2'
+    _format = '.eps'
 
     panel_loc = -1 # upper left outside the box
     n_rows = 1; n_cols = 2
@@ -264,8 +268,8 @@ def figure3(
         remove_ticks(ax)
 
     if save_:
-        #fname = '.'.join((fig_name, _format))
-        savefig(fig_name)
+        #fname = '.'.join((figname, _format))
+        savefig(fig, figname)
         #fig.savefig(_dir + fname, dpi=dpi, format=_format, bbox_inches=_bbox,
          #           pad_inches=_pad_inches)
 
@@ -273,13 +277,14 @@ def figure3(
 
     return fig
 
-def figure4(
-        fnames=[myrun_noiseN4u, myrun_noiseN4s], n=None, devo_times=[],
-        verbose=False, save_=True):
+def figure3(
+        fnames=[myrun_noiseN4m0u, myrun_noiseN4m0s], n=log10(2.42013e+06),
+        devo_times=[], verbose=False, save_=True):
 
     experiment = 'transition'
-    fig_name = 'figure4'
+    figname = 'figure3'
     titles = ['random', 'stable']
+    _format = '.eps'
 
     panel_loc = -1 # upper left outside the box
     n_rows = 1; n_cols = 2
@@ -312,8 +317,8 @@ def figure4(
         remove_ticks(ax)
 
     if save_:
-        #fname = '.'.join((fig_name, _format))
-        savefig(fig_name)
+        #fname = '.'.join((figname, _format))
+        savefig(fig, figname)
         #fig.savefig(_dir + fname, dpi=dpi, format=_format, bbox_inches=_bbox,
          #           pad_inches=_pad_inches)
 
@@ -321,13 +326,14 @@ def figure4(
 
     return fig
 
-def figure5(
-        fnames=[myrun_noiseN4realu, myrun_noiseN4reals], n=log10(2.00923e+06),
-        verbose=False, save_=True):
+def figure4(
+        fnames=[myrun_noiseN4m0realu, myrun_noiseN4m0reals],
+        n=log10(1.6681e+06), verbose=False, save_=True):
 
     experiment = 'transition'
-    fig_name = 'figure5'
+    figname = 'figure4'
     titles = ['random', 'stable']
+    _format = '.eps'
 
     panel_loc = -1 # upper left outside the box
     n_rows = 1; n_cols = 2
@@ -366,8 +372,94 @@ def figure5(
         remove_ticks(ax)
 
     if save_:
-        #fname = '.'.join((fig_name, _format))
-        savefig(fig_name)
+        #fname = '.'.join((figname, _format))
+        savefig(fig, figname)
+        #fig.savefig(_dir + fname, dpi=dpi, format=_format, bbox_inches=_bbox,
+         #           pad_inches=_pad_inches)
+
+    reset_default_rcParams()
+
+    return fig
+
+def figure5(
+        fnames=[myrun_noiseN4m0nfu, myrun_noiseN4m0rfu],
+        devo_times=[], verbose=False, save_=True):
+
+    experiment = 'transition'
+    figname = 'figure5'
+    _format = '.eps'
+
+    samp_lbl = r'$\lambda$'
+    pot_lbl = r'$\mathcal{U}_{max} = 2^N$'
+    titles = ['neighbor flip', 'random or no flip']
+
+    leg_loc = 'best'
+    panel_loc = -1 # upper left outside the box
+    n_rows = 2; n_cols = 2
+
+    set_custom_rcParams(journal, experiment, n_cols)
+    matplotlib.rcParams['font.size'] = 14
+    figsize = [12.0, 6.0*n_rows]
+    fig = figure(figsize=figsize)
+
+    # from figure1()
+    n = log10(102353)
+    for i, fname in enumerate(fnames):
+        ax = fig.add_subplot(n_rows, n_cols, i+1)
+
+        fig = stable_states_vs_N_vs_noise(
+            fnames[i], 10**n, devo_times=devo_times, fig=fig,
+            pot_lbl='', noise_lbl='', samp_lbl='', verbose=verbose)
+
+        axis((3,20,10,1e6))
+        xlabel('N')
+        ylabel(r'$\mathcal{U}$')
+        title(titles[i])
+        legend(loc='best', fancybox=True)#, title=r'$\sigma$')
+        set_panel_labels(ax, uppercase[i], panel_loc)
+        remove_spines(ax)
+        remove_ticks(ax)
+        ax.set_axis_bgcolor("#E5E5E5")
+
+        # annotated label of 'potential' dashed line
+        x = ax.get_children()[2].get_xydata()[-1]
+        ax.annotate(pot_lbl, (x[0],x[1]), xytext=(0.7, 0.92),
+                    textcoords='axes fraction', va='center')
+
+        # annotated label of 'n_samples' dashed line
+        x = ax.get_children()[3].get_xydata()[-1]
+        y = find_nearest(get_int_datapoints(0, log10(1e8), 100), 10**n)
+        ax.annotate(samp_lbl, (x[0],x[1]), xytext=(10, y),
+                    textcoords='data', va='bottom')
+
+
+    # from figure3()
+    n = log10(2.42013e+06)
+    for i, fname in enumerate(fnames):
+        ax = fig.add_subplot(n_rows, n_cols, i+3)
+        fig = old_figure3(
+            fname, n, devo_times,
+            fig=fig, noise_lbl='', pot_lbl='', verbose=verbose)
+
+        # set_plot_kwargs
+        # set panel B's axis as A's
+        if i == 0:
+            _axis = axis()
+        else:
+            axis(_axis)
+        xlabel(r'$k$')
+        ylabel(r'$\mathcal{U}$')
+        title(titles[i])
+        legend(loc='best', fancybox=True)#, title=r'$\sigma$')
+        set_panel_labels(ax, uppercase[i], panel_loc)
+        ggplot.theme_gray().apply_theme(ax)
+        ax.set_axis_bgcolor("#E5E5E5")
+        remove_spines(ax)
+        remove_ticks(ax)
+
+    if save_:
+        #fname = '.'.join((figname, _format))
+        savefig(fig, figname)
         #fig.savefig(_dir + fname, dpi=dpi, format=_format, bbox_inches=_bbox,
          #           pad_inches=_pad_inches)
 

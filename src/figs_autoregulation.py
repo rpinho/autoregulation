@@ -256,11 +256,11 @@ def fig_conservation(
 # 4) Coevolution of stability, robustness and autoregulation
 
 # fig 5
-def fig_coevolution(vspan=[[52, 2779], [1e5, 1e7]], threshold=.1, _save=True):
+def fig_coevolution(vspan=[[52, 2779], [1e5, 1e7]], threshold=.1, save_=True):
     return all_models_all_stats(
-        ['p', 's', 'robustness', 'q'], 'm3r05b', threshold=threshold,
+        ['p', 's', 'robustness', 'q', '2p'], 'm3r05b', threshold=threshold,
         y_ticks=ps_all, vspan=vspan, journal='plos',
-        experiment='autoregulation', fig_name='coevolution', _save=_save)[0]
+        experiment='autoregulation', fig_name='coevolution-new', save_=save_)[0]
 
 
 # panels 6A and 6B: boxplots

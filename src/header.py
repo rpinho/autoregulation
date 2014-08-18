@@ -194,7 +194,7 @@ def get_model(number, gen=G):
                    ('Wagner: evolution with selection for fixed points and'
                     + 'target phenotype')]
     model = []
-    lopp = zip(
+    loop = zip(
         [0, gen, gen, gen], [None, inf, inf, 0.1], [None, 1, 0, 0], model_names)
     for g, s, min_fit, name in loop:
         model.append(dict(G=g, s=s, min_fit=min_fit, name=name))

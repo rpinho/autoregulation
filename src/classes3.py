@@ -173,6 +173,9 @@ class Individual:
     def get_number_of_positive_non_diagonal(self):
         return get_number_of_positive_non_diagonal(self.genotype)
 
+    def get_activating_fraction_length2_autoregulatory(self):
+        return get_activating_fraction_length2_autoregulatory(self.genotype)
+
     # label returns labels, n
     def get_number_pos_clusters(self):
         return label_clusters(self.genotype,-1)[1]
@@ -1503,7 +1506,10 @@ def evaluate_survival(pop):
 ####################
 
 # x is an instance of src.classes.individual
-ind_functions = {'a':
+ind_functions = {'2p':
+                 lambda x: get_activating_fraction_length2_autoregulatory(x.genotype),
+
+                 'a':
                  lambda x: x.get_activating_fraction(),
 
                  'p':
