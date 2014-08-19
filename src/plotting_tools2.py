@@ -3503,10 +3503,10 @@ def get_stat(
 
 # getattr(pop, stat)
 def non_evolved_autoregulation(
-        stats_, stable = False, binary = True, n_runs = 10, pop_size = int(1e4),
-        p = None, q = None, period = 1, ps = ps_all,
-        genotype_func = 'diagonal_p_genotype',
-        experiment = 'autoregulation', extension = '.dat', verbose = True):
+        stats_, stable=False, binary=True, n_runs=10, pop_size=int(1e4),
+        p=None, q=None, period=1, ps=ps_all,
+        genotype_func='diagonal_p_genotype',
+        experiment='autoregulation', extension='.dat', verbose=True):
 
     pops = ((get_non_evolved_pop(
         experiment, stable, run, x, p, q, period,
