@@ -137,10 +137,10 @@ extra_stat = None#'entropy fix normed']
 G_string   = 1000
 
 ## Figure parameters
-formats      = {'plos': 'pdf', None: 'pdf'} #eps
+formats      = {'plos': 'eps', None: 'pdf'} #eps
 dpis         = {'plos': 300, 'bmc': 600, None: 300}
-fontsizes    = {'plos': 12,  'bmc': 12,  None: 10} #plos: 8-12 point
-fontnames    = {'plos': 'Times',#'Arial 'Symbol'],
+fontsizes    = {'plos': 16,  'bmc': 12,  None: 10} #plos: 8-12 point
+fontnames    = {'plos': 'Times New Roman',#'Arial 'Symbol'],
                'bmc': '',  None: 'Bitstream Vera Sans'}
 #fontweight = 'bold'
 panel_labels = {'plos': uppercase, None: uppercase}

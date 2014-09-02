@@ -242,7 +242,7 @@ def get_stat_label(stat, diversity = None):
         return 'q'
 
     if stat == '2p':
-        return 'length-2 autoregulatory motif'
+        return 'r'
 
     if type(stat) == list:
         return str(map(get_stat_label, stat))
